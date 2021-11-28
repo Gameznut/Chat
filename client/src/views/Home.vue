@@ -6,21 +6,17 @@
         width="640"
         height="240"
         class="border w-full border-black"
+        @keyup.up="position.y += 5"
       ></canvas>
       <div class="flex gap-2 justify-between my-2">
         <button
           class="bg-green-400 hover:bg-green-600 w-full"
           @click="move('left')"
-          @keyup.left="move()"
         >
           Left
         </button>
         <div class="w-full gap-2 flex flex-col">
-          <button
-            class="bg-green-400 w-full p-3"
-            @click="move('up')"
-            @keyup.up="position.y += 5"
-          >
+          <button class="bg-green-400 w-full p-3" @click="move('up')">
             Up
           </button>
           <button

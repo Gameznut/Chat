@@ -22,8 +22,9 @@ express.get('/', (req, res) => {
 });
 
 socketio.on("connection", socket => {
+    console.log(`user ${socket.id} is connected`);
+    // game 
     socket.emit("position", position)
-    console.log("there is connection");
     socket.on("move", data =>{
         switch(data){
             case"left":
@@ -43,6 +44,15 @@ socketio.on("connection", socket => {
                 socketio.emit("position", position)
                 break
         }
+    })
+// texting
+    socket.on('message', data =>{
+      socket.broadcast.emit('recieved', data)
+      console.log(data);
+    })
+    
+    socket.on('disconnect', ()=>{
+      console.log(`user ${socket.id} left.`);
     })
 })
    

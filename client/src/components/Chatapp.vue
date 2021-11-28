@@ -1,122 +1,92 @@
 <template>
-  <div class="hello">
-    <h1>{{ msg }}</h1>
-    <p>
-      For a guide and recipes on how to configure / customize this project,<br />
-      check out the
-      <a href="https://cli.vuejs.org" target="_blank" rel="noopener"
-        >vue-cli documentation</a
-      >.
-    </p>
-    <h3>Installed CLI Plugins</h3>
-    <ul>
-      <li>
-        <a
-          href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-babel"
-          target="_blank"
-          rel="noopener"
-          >babel</a
-        >
-      </li>
-      <li>
-        <a
-          href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-router"
-          target="_blank"
-          rel="noopener"
-          >router</a
-        >
-      </li>
-      <li>
-        <a
-          href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-eslint"
-          target="_blank"
-          rel="noopener"
-          >eslint</a
-        >
-      </li>
-    </ul>
-    <h3>Essential Links</h3>
-    <ul>
-      <li>
-        <a href="https://vuejs.org" target="_blank" rel="noopener">Core Docs</a>
-      </li>
-      <li>
-        <a href="https://forum.vuejs.org" target="_blank" rel="noopener"
-          >Forum</a
-        >
-      </li>
-      <li>
-        <a href="https://chat.vuejs.org" target="_blank" rel="noopener"
-          >Community Chat</a
-        >
-      </li>
-      <li>
-        <a href="https://twitter.com/vuejs" target="_blank" rel="noopener"
-          >Twitter</a
-        >
-      </li>
-      <li>
-        <a href="https://news.vuejs.org" target="_blank" rel="noopener">News</a>
-      </li>
-    </ul>
-    <h3>Ecosystem</h3>
-    <ul>
-      <li>
-        <a href="https://router.vuejs.org" target="_blank" rel="noopener"
-          >vue-router</a
-        >
-      </li>
-      <li>
-        <a href="https://vuex.vuejs.org" target="_blank" rel="noopener">vuex</a>
-      </li>
-      <li>
-        <a
-          href="https://github.com/vuejs/vue-devtools#vue-devtools"
-          target="_blank"
-          rel="noopener"
-          >vue-devtools</a
-        >
-      </li>
-      <li>
-        <a href="https://vue-loader.vuejs.org" target="_blank" rel="noopener"
-          >vue-loader</a
-        >
-      </li>
-      <li>
-        <a
-          href="https://github.com/vuejs/awesome-vue"
-          target="_blank"
-          rel="noopener"
-          >awesome-vue</a
-        >
-      </li>
-    </ul>
+  <div class="relative h-screen">
+    <div
+      v-if="!joined"
+      class="absolute inset-80 flex justify-center gap-2 items-center"
+    >
+      <input
+        type="text"
+        required
+        class="outline-none py-1 text-center font-black text-green-400 border-yellow-400 border-b-2 w-96"
+        @keyup.enter="join"
+        v-model="user"
+      />
+      <button
+        @click="join"
+        class="bg-green-400 p-2 rounded-md shadow animate-bounce"
+      >
+        Join
+      </button>
+    </div>
+    <div v-if="joined">
+      <div v-for="message in messages" :key="message.id">
+        <small class="block text-center">{{
+          new Date().toDateString(message.id).slice(4, 10)
+        }}</small>
+        <p class="text-left bg-blue-800 bg-opacity-10 px-1 min-w-max">
+          <b>{{ message.user }}: </b>{{ message.text }}
+          <span class="ml-4 text-sm font-medium text-green-400">{{
+            new Date().toLocaleString(message.id).slice(12)
+          }}</span>
+        </p>
+      </div>
+      <div class="">
+        <input
+          type="text"
+          class="bottom-0 p-1 outline-none font-mono text-lg absolute left-0 w-full border-2 border-indigo-700"
+          @keyup.enter="sendMessage"
+          v-model="textmessage"
+        />
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
+import io from "socket.io-client";
 export default {
-  name: "HelloWorld",
-  props: {
-    msg: String,
+  data() {
+    return {
+      user: "",
+      joined: false,
+      textmessage: "",
+      messages: [],
+    };
+  },
+  methods: {
+    join() {
+      console.log(this.user);
+      if (this.user != "") {
+        this.joined = true;
+        this.socketInstance = io("http://localhost:8000", {
+          withCredentials: true,
+          extraHeaders: {
+            "my-custom-header": "abcd",
+          },
+        });
+        this.socketInstance.on("recieved", (data) => {
+          this.messages = this.messages.concat(data);
+        });
+      } else {
+        alert("Write your name....");
+      }
+    },
+    sendMessage() {
+      console.log(this.textmessage);
+      this.addMessage();
+      this.textmessage = "";
+    },
+    addMessage() {
+      const message = {
+        id: new Date().getTime(),
+        text: this.textmessage,
+        user: this.user,
+      };
+      console.log(message);
+      this.messages = this.messages.concat(message);
+
+      this.socketInstance.emit("message", message);
+    },
   },
 };
 </script>
-
-<!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped>
-h3 {
-  margin: 40px 0 0;
-}
-ul {
-  list-style-type: none;
-  padding: 0;
-}
-li {
-  display: inline-block;
-  margin: 0 10px;
-}
-a {
-  color: #42b983;
-}
-</style>
